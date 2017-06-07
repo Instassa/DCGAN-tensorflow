@@ -106,13 +106,6 @@ class DCGAN(object):
     self.sample_inputs = tf.placeholder(
       tf.float32, [self.sample_num] + image_dims, name='sample_inputs')
     
-#    self.W0 = tf.Variable(tf.zeros([self.z_dim, 160]))
-#    self.b0 = tf.Variable(tf.zeros([160]))
-#    self.W1 = tf.Variable(tf.zeros([160, 320]))
-#    self.b1 = tf.Variable(tf.zeros([320]))
-#    self.W2 = tf.Variable(tf.zeros([320, 160]))
-#    self.b2 = tf.Variable(tf.zeros([160]))
-    
     
     
     inputs = self.inputs
@@ -225,8 +218,7 @@ class DCGAN(object):
         self.data = glob(os.path.join(
           "./data", config.dataset, self.input_fname_pattern))
         batch_idxs = min(len(self.data), config.train_size) // config.batch_size
-#      print('Batch idxs: ', batch_idxs)
-#      batch_idxs = 10
+
 
       for idx in xrange(0, batch_idxs):
         if config.dataset == 'mnist':
@@ -402,7 +394,7 @@ class DCGAN(object):
   def generator(self, z, y=None):
     with tf.variable_scope("generator") as scope:
       if not self.y_dim:
-        extra_size = 1
+        extra_size = 2
         stride = 2
         s_h, s_w = self.output_height, self.output_width
         s_h2, s_w2 = extra_size*conv_out_size_same(s_h, stride), conv_out_size_same(s_w, stride)
@@ -443,38 +435,7 @@ class DCGAN(object):
         print('Generator: h4: ', (h3).get_shape(), [self.batch_size, s_h, s_w, self.c_dim])
         
         return tf.nn.tanh(h4)
-    
-#==============================================================================
-#         C=np.int(self.gf_dim*2*s_h2*s_w2/32)
-# 
-# #        self.h0, self.h0_w, self.h0_b = linear(z, self.gfc_dim, 'g_h0_relu', with_w = True)
-#         self.h0, self.h0_w, self.h0_b = linear(z, C, 'g_h0_relu', with_w = True)
-#         h0 = tf.nn.relu(self.g_bn0(self.h0))
-#         print('z dimensions: ', np.shape(z))
-#         print('h0 shape: ', h0.get_shape(), 'gfc_dim', self.gfc_dim)
-#         
-# #        self.h1, self.h1_w, self.h1_b = linear(h0, self.gf_dim*2*s_h4*s_w4, 'g_h1_relu', with_w = True)
-#         self.h1, self.h1_w, self.h1_b = linear(h0, C, 'g_h1_relu', with_w = True)
-#         h1 = tf.nn.relu(self.g_bn1(self.h1))
-# #        h1 = tf.reshape(h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2])
-#         print('h1  shape:', h1.get_shape(), self.gf_dim*2*s_h4*s_w4)
-# #        h1 = conv_cond_concat(h1, yb)
-# 
-# #        self.h2, self.h2_w, self.h2_b = linear(h1, self.gf_dim*2*s_h2*s_w2, 'g_h2_relu', with_w = True)
-#         self.h2, self.h2_w, self.h2_b = linear(h1, C, 'g_h2_relu', with_w = True)
-#         h2 = tf.nn.relu(self.g_bn2(self.h2))
-#         print('h2  shape:', h2.get_shape(), self.gf_dim*2*s_h2*s_w2)
-# 
-# #        self.h3, self.h3_w, self.h3_b = linear(h2, np.int(self.gf_dim*2*s_h2*s_w2/32), 'g_h3_relu', with_w = True)
-#         self.h3, self.h3_w, self.h3_b = linear(h2, C, 'g_h3_relu', with_w = True)
-#         h3 = tf.nn.relu(self.g_bn3(self.h3))
-#         print('h3  shape:', h3.get_shape(), self.gf_dim*2*s_h2*s_w2)
-#         
-#         h4 = tf.reshape(h3, [64, 2, 80, 1])
-# 
-#         return tf.nn.relu(h4)
-#==============================================================================
-    
+ 
       else:
         s_h, s_w = self.output_height, self.output_width
         s_h2, s_h4 = int(s_h/2), int(s_h/4)
@@ -506,7 +467,7 @@ class DCGAN(object):
       scope.reuse_variables()
 
       if not self.y_dim:
-        extra_size = 1
+        extra_size = 2
         s_h, s_w = self.output_height, self.output_width
         s_h2, s_w2 = extra_size*conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
         s_h4, s_w4 = extra_size*conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
@@ -541,29 +502,6 @@ class DCGAN(object):
 #        print('Sampler: h4: ', h4.get_shape())
         return tf.nn.tanh(h4)
 
-#==============================================================================
-#         C=np.int(self.gf_dim*2*s_h2*s_w2/32)
-#         
-# #        h0 = linear(z, self.gfc_dim, 'g_h0_relu')
-#         h0 = linear(z, C, 'g_h0_relu')        
-#         h0 = tf.nn.relu(self.g_bn0(h0, train=False))
-# 
-# #        h1 = linear(h0, self.gf_dim*2*s_h4*s_w4, 'g_h1_relu')
-#         h1 = linear(h0, C, 'g_h1_relu')        
-#         h1 = tf.nn.relu(self.g_bn1(h1, train=False))
-# 
-# #        h2 = linear(h1, self.gf_dim*2*s_h2*s_w2, 'g_h2_relu')
-#         h2 = linear(h1, C, 'g_h2_relu')
-#         h2 = tf.nn.relu(self.g_bn2(h2, train=False))
-# 
-# #        h3 = linear(h2, np.int(self.gf_dim*2*s_h2*s_w2/32), 'g_h3_relu')
-#         h3 = linear(h2, C, 'g_h3_relu')
-#         h3 = tf.nn.relu(self.g_bn3(h3, train=False))
-# 
-#         h4 = tf.reshape(h3, [64, 2, 80, 1])
-# 
-#         return tf.nn.relu(h4)
-#==============================================================================
       else:
         s_h, s_w = self.output_height, self.output_width
         s_h2, s_h4 = int(s_h/2), int(s_h/4)
