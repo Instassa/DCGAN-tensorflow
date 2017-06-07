@@ -26,17 +26,25 @@ def get_image(image_path, input_height, input_width,
               resize_height=64, resize_width=64,
               crop=True, grayscale=False):
   image = imread(image_path, grayscale)
-  return transform(image, input_height, input_width,
+  if np.shape(image)[0] == input_height and np.shape(image)[1] == input_width:
+      return image
+#  print(np.shape(image))
+  else:
+      return transform(image, input_height, input_width,
                    resize_height, resize_width, crop)
 
 def save_images(images, size, image_path):
   return imsave(inverse_transform(images), size, image_path)
-
+def save_npys(npy, npy_path):
+  return np.save(npy_path, inverse_transform(npy))
+  
+  
 def imread(path, grayscale = False):
-  if (grayscale):
-    return scipy.misc.imread(path, flatten = True).astype(np.float)
-  else:
-    return scipy.misc.imread(path).astype(np.float)
+#  if (grayscale):
+#    return scipy.misc.imread(path, flatten = True).astype(np.float)
+#  else:
+#    return scipy.misc.imread(path).astype(np.float)
+    return np.load(path).astype(np.float)
 
 def merge_images(images, size):
   return inverse_transform(images)
@@ -174,7 +182,9 @@ def visualize(sess, dcgan, config, option):
   if option == 0:
     z_sample = np.random.uniform(-0.5, 0.5, size=(config.batch_size, dcgan.z_dim))
     samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
-    save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_%s.png' % strftime("%Y%m%d%H%M%S", gmtime()))
+    save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_%s.npy' % strftime("%Y%m%d%H%M%S", gmtime()))
+#    save_npys('./samples/test_%s.npy' % strftime("%Y%m%d%H%M%S", gmtime()), samples)
+#    save_npys('./samples/test_%s.npy'.format(strftime("%Y%m%d%H%M%S", gmtime())), samples)
   elif option == 1:
     values = np.arange(0, 1, 1./config.batch_size)
     for idx in xrange(100):
@@ -193,6 +203,9 @@ def visualize(sess, dcgan, config, option):
         samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
 
       save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_arange_%s.png' % (idx))
+#      save_npys('./samples/test_arange_%s.npy' % (idx), samples)
+#      save_npys('./samples/test_arange_%s.npy'.format(idx), samples)      
+      
   elif option == 2:
     values = np.arange(0, 1, 1./config.batch_size)
     for idx in [random.randint(0, 99) for _ in xrange(100)]:
@@ -215,7 +228,7 @@ def visualize(sess, dcgan, config, option):
       try:
         make_gif(samples, './samples/test_gif_%s.gif' % (idx))
       except:
-        save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_%s.png' % strftime("%Y%m%d%H%M%S", gmtime()))
+        save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_%s.npy' % strftime("%Y%m%d%H%M%S", gmtime()))
   elif option == 3:
     values = np.arange(0, 1, 1./config.batch_size)
     for idx in xrange(100):
