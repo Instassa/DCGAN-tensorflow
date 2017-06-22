@@ -361,18 +361,42 @@ class DCGAN(object):
         scope.reuse_variables()
 
       if not self.y_dim:
+#==============================================================================
+#         print('Discriminator h0 (linear): ', np.shape(image), self.df_dim)
+#         h0 = lrelu(conv2d(image, self.df_dim, name='d_h0_conv'))
+#         print('Discriminator h1 (linear): ', (h0).get_shape(), self.df_dim*2)
+#         h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim*2, name='d_h1_conv')))
+#         print('Discriminator h2 (linear): ', (h1).get_shape(), self.df_dim*4)
+#         h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim*4, name='d_h2_conv')))
+#         print('Discriminator h3 (linear): ', (h2).get_shape(), self.df_dim*8)
+#         h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim*8, name='d_h3_conv')))
+#         print('Discriminator h4 (linear) reshape: ', (h3).get_shape(), [self.batch_size, -1])
+#         h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
+#         
+#         return tf.nn.sigmoid(h4), h4
+#==============================================================================
         print('Discriminator h0 (linear): ', np.shape(image), self.df_dim)
-        h0 = lrelu(conv2d(image, self.df_dim, name='d_h0_conv'))
-        print('Discriminator h1 (linear): ', (h0).get_shape(), self.df_dim*2)
-        h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim*2, name='d_h1_conv')))
-        print('Discriminator h2 (linear): ', (h1).get_shape(), self.df_dim*4)
-        h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim*4, name='d_h2_conv')))
-        print('Discriminator h3 (linear): ', (h2).get_shape(), self.df_dim*8)
-        h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim*8, name='d_h3_conv')))
+        im = tf.reshape(image, [64, 160])
+        
+        self.h0, self.h0_w, self.h0_b = linear(im, 1024, 'd_h0', with_w = True)
+        h0 = tf.nn.tanh(self.g_bn0(self.h0))
+        print('Discriminator h1 (linear): ', (h0).get_shape())
+        
+        self.h1, self.h1_w, self.h1_b = linear(h0, 1024, 'd_h1', with_w = True)
+        h1 = tf.nn.tanh(self.g_bn1(self.h1))
+        print('Discriminator h2 (linear): ', (h1).get_shape())
+        
+        self.h2, self.h2_w, self.h2_b = linear(h1, 160, 'd_h2', with_w = True)
+        h2 = tf.nn.tanh(self.g_bn2(self.h2))
+        print('Discriminator h3 (linear): ', (h2).get_shape())
+
+        self.h3, self.h3_w, self.h3_b = linear(h2, 2, 'd_h3', with_w = True)        
+        h3 = tf.nn.tanh(self.g_bn3(self.h3))
         print('Discriminator h4 (linear) reshape: ', (h3).get_shape(), [self.batch_size, -1])
-        h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
+        h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h4')
 
         return tf.nn.sigmoid(h4), h4
+      
       else:
         yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
         x = conv_cond_concat(image, yb)
